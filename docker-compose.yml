@@ -1,0 +1,68 @@
+version: '3.9'
+services:
+  db:
+    image: postgres:13.3-alpine
+    restart: always
+    environment:
+      - POSTGRES_USER=excel_user
+      - POSTGRES_PASSWORD=excel_password
+      - POSTGRES_DB=excel_db
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  redis:
+    image: redis:6.2-alpine
+    restart: always
+
+  backend:
+    depends_on:
+      - db
+      - redis
+    image: ghcr.io/dmitry-bakeev/excel-api/backend:latest
+    restart: always
+    environment:
+      - SECRET_KEY=excel_secret
+      - DEBUG=0
+      - POSTGRES_USER=excel_user
+      - POSTGRES_PASSWORD=excel_password
+      - POSTGRES_DB=excel_db
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - WORKERS=2
+    volumes:
+      - static:/app/staticfiles:rw
+      - media:/app/media:rw
+
+  celery_worker:
+    image: ghcr.io/dmitry-bakeev/excel-api/backend:latest
+    command: celery worker -l info
+    restart: always
+    environment:
+      - CELERY_APP=main
+      - SECRET_KEY=excel_secret
+      - DEBUG=0
+      - POSTGRES_USER=excel_user
+      - POSTGRES_PASSWORD=excel_password
+      - POSTGRES_DB=excel_db
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - WORKERS=2
+    volumes:
+      - static:/app/staticfiles:rw
+      - media:/app/media:rw
+
+  frontend:
+    image: ghcr.io/dmitry-bakeev/excel-api/frontend:latest
+    restart: always
+    volumes:
+      - static:/app/staticfiles:ro
+      - media:/app/media:ro
+    ports:
+      - '80:80'
+
+volumes:
+  pgdata: {}
+  static: {}
+  media: {}
