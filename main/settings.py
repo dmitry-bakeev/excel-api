@@ -157,6 +157,12 @@ SIMPLE_JWT = {
 }
 
 
+# Celery
+
+CELERY_BROKER_URL = 'redis://localhost:6379/0'
+CELERY_WORKER_HIJACK_ROOT_LOGGER = False
+
+
 # Load local settings
 
 try:
