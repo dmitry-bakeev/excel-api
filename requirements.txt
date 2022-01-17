@@ -54,3 +54,4 @@ tzdata==2021.5
 vine==5.0.0
 wcwidth==0.2.5
 wrapt==1.13.3
+xlrd==2.0.1
